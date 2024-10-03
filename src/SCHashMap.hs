@@ -14,6 +14,7 @@ module SCHashMap
 where
 
 import Data.Hashable (Hashable, hash)
+import Test.Tasty.QuickCheck (Arbitrary (arbitrary), suchThat)
 
 type Key = Int
 
@@ -21,9 +22,29 @@ type Count = Int
 
 newtype Value a = Value a deriving (Eq, Ord)
 
-newtype Bucket a = Bucket [(Value a, Count)]
+instance (Arbitrary a) => Arbitrary (Value a) where
+  arbitrary = Value <$> arbitrary
+
+newtype Bucket a = Bucket [(Value a, Count)] deriving (Eq)
+
+instance (Arbitrary a) => Arbitrary (Bucket a) where
+  arbitrary = do
+    pairs <- arbitrary `suchThat` validPairs
+    return $ Bucket pairs
+    where
+      validPairs = all (\(_, count) -> count > 0)
 
 newtype SCHashMap a = SCHashMap [(Key, Bucket a)]
+
+instance (Arbitrary a, Hashable a) => Arbitrary (SCHashMap a) where
+  arbitrary = do
+    let m1 = emptyHashMap
+    values <- arbitrary
+    let validValues = map Value values
+    return $ foldr insert m1 validValues
+
+instance (Show a) => Eq (SCHashMap a) where
+  (==) (SCHashMap h1) (SCHashMap h2) = show h1 == show h2
 
 instance (Show a) => Show (Value a) where
   show (Value v) = show v
@@ -51,7 +72,9 @@ instance (Show a) => Show (SCHashMap a) where
 instance (Ord a) => Semigroup (SCHashMap a) where
   (<>) (SCHashMap hashmap1) (SCHashMap hashmap2) = SCHashMap newHashMap
     where
-      newHashMap = [(k1, combineBucket b1 b2) | (k1, b1) <- hashmap1, (k2, b2) <- hashmap2, k1 == k2]
+      newHashMap =
+        [ (k1, combineBucket b1 b2) | (k1, b1) <- hashmap1, Just b2 <- [lookup k1 hashmap2]
+        ]
 
       combineBucket :: (Ord a) => Bucket a -> Bucket a -> Bucket a
       combineBucket (Bucket bucket1) (Bucket bucket2) =
@@ -60,7 +83,7 @@ instance (Ord a) => Semigroup (SCHashMap a) where
             mergeBuckets a@(x : xs) b@(y : ys)
               | fst x == fst y = (fst x, snd x + snd y) : mergeBuckets xs ys
               | fst x < fst y = x : mergeBuckets xs b
-              | otherwise = y : mergeBuckets a xs
+              | otherwise = y : mergeBuckets a ys
          in Bucket (mergeBuckets bucket1 bucket2)
 
 instance (Ord a) => Monoid (SCHashMap a) where
@@ -75,8 +98,8 @@ emptyHashMap = SCHashMap [(key, Bucket []) | key <- [0 .. bucketsCount - 1]]
 hashFunc :: (Hashable a) => Value a -> Key
 hashFunc (Value val) = hash val `mod` bucketsCount
 
-insert :: (Hashable a) => SCHashMap a -> Value a -> SCHashMap a
-insert (SCHashMap hashMap) value = SCHashMap newHashMap
+insert :: (Hashable a) => Value a -> SCHashMap a -> SCHashMap a
+insert value (SCHashMap hashMap) = SCHashMap newHashMap
   where
     key = hashFunc value
 

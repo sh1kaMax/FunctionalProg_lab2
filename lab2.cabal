@@ -37,6 +37,9 @@ library
   build-depends:
       base >=4.7 && <5
     , hashable >=1.0
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
   default-language: Haskell2010
 
 executable lab2-exe
@@ -52,12 +55,17 @@ executable lab2-exe
       base >=4.7 && <5
     , hashable >=1.0
     , lab2
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
   default-language: Haskell2010
 
 test-suite lab2-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      PropertyTestMultiset
+      TestMultiset
       Paths_lab2
   autogen-modules:
       Paths_lab2
@@ -68,4 +76,7 @@ test-suite lab2-test
       base >=4.7 && <5
     , hashable >=1.0
     , lab2
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
   default-language: Haskell2010

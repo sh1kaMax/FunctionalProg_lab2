@@ -1,5 +1,6 @@
 module Multiset
-  ( createMultiset,
+  ( Multiset (..),
+    createMultiset,
     Multiset.insert,
     Multiset.delete,
     Multiset.find,
@@ -23,10 +24,17 @@ import SCHashMap
     insert,
     mapHashMap,
   )
+import Test.Tasty.QuickCheck (Arbitrary (arbitrary))
 
 newtype Multiset a = Multiset (SCHashMap a)
 
-instance Show a => Show (Multiset a) where
+instance (Arbitrary a, Hashable a) => Arbitrary (Multiset a) where
+  arbitrary = Multiset <$> arbitrary
+
+instance (Show a) => Eq (Multiset a) where
+  (==) (Multiset m1) (Multiset m2) = m1 == m2
+
+instance (Show a) => Show (Multiset a) where
   show (Multiset m) = show m
 
 instance (Ord a) => Semigroup (Multiset a) where
@@ -39,7 +47,7 @@ createMultiset :: Multiset a
 createMultiset = Multiset emptyHashMap
 
 insert :: (Hashable a) => Multiset a -> a -> Multiset a
-insert (Multiset multiset) v = Multiset (SCHashMap.insert multiset (Value v))
+insert (Multiset multiset) v = Multiset (SCHashMap.insert (Value v) multiset)
 
 delete :: (Hashable a) => Multiset a -> a -> Multiset a
 delete (Multiset multiset) v = Multiset (SCHashMap.delete multiset (Value v))
