@@ -22,7 +22,7 @@
 
 Интерфейс Separate Chaining Hashmap реализован в [SCHashmap](src/SCHashMap.hs)  
 
-### Типы:
+### Типы
 
 ```Haskell
 type Key = Int
@@ -33,11 +33,11 @@ newtype Bucket a = Bucket [(Value a, Count)] deriving (Eq)
 newtype SCHashMap a = SCHashMap [(Key, Bucket a)]
 ```
 
-Тип SCHashMap полиморфный 
+Тип SCHashMap полиморфный
 
-### Основные функции:
+### Основные функции
 
-```Haskell 
+```Haskell
 # Добавление элемента в hashmap
 insert :: (Hashable a) => Value a -> SCHashMap a -> SCHashMap a
 insert value (SCHashMap hashMap) = SCHashMap newHashMap
@@ -112,6 +112,6 @@ foldrHashMap func acc (SCHashMap hashmap) = foldr bucketFold acc hashmap
 
 Данная структура данных протестирована с помощью [unit тестов](test/TestMultiset.hs) и [property-based тестов](test/PropertyTestMultiset.hs).
 
-### Отчет по тестированию:
+### Отчет по тестированию
 
-![](image.png)
+![Error](image.png)
