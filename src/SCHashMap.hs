@@ -25,6 +25,9 @@ newtype Value a = Value a deriving (Eq, Ord)
 instance (Arbitrary a) => Arbitrary (Value a) where
   arbitrary = Value <$> arbitrary
 
+instance (Show a) => Show (Value a) where
+  show (Value v) = show v
+
 newtype Bucket a = Bucket [(Value a, Count)] deriving (Eq)
 
 instance (Arbitrary a) => Arbitrary (Bucket a) where
@@ -33,6 +36,15 @@ instance (Arbitrary a) => Arbitrary (Bucket a) where
     return $ Bucket pairs
     where
       validPairs = all (\(_, count) -> count > 0)
+
+instance (Show a) => Show (Bucket a) where
+  show (Bucket xs) = bucket
+    where
+      bucket =
+        if null xs
+          then ""
+          else init (init (concatMap showConcat xs))
+      showConcat (v, c) = concat (replicate c (show v ++ ", "))
 
 newtype SCHashMap a = SCHashMap [(Key, Bucket a)]
 
@@ -45,18 +57,6 @@ instance (Arbitrary a, Hashable a) => Arbitrary (SCHashMap a) where
 
 instance (Show a) => Eq (SCHashMap a) where
   (==) (SCHashMap h1) (SCHashMap h2) = show h1 == show h2
-
-instance (Show a) => Show (Value a) where
-  show (Value v) = show v
-
-instance (Show a) => Show (Bucket a) where
-  show (Bucket xs) = bucket
-    where
-      bucket =
-        if null xs
-          then ""
-          else init (init (concatMap showConcat xs))
-      showConcat (v, c) = concat (replicate c (show v ++ ", "))
 
 instance (Show a) => Show (SCHashMap a) where
   show (SCHashMap xs) = "[" ++ notNullMap ++ "]"
