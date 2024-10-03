@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Monoid law, right identity" #-}
 {-# HLINT ignore "Monoid law, left identity" #-}
 module PropertyTestMultiset (properties) where
